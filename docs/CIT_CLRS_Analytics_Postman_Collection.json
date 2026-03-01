@@ -1,0 +1,275 @@
+{
+  "info": {
+    "name": "CIT CLRS Analytics API",
+    "description": "Complete collection for testing the Analytics Module endpoints",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"custodian@citclrs.edu\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(200)) {",
+                  "    const response = pm.response.json();",
+                  "    pm.globals.set('auth_token', response.token);",
+                  "    pm.test('Login successful', () => {",
+                  "        pm.expect(response.success).to.be.true;",
+                  "        pm.expect(response.token).to.exist;",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Analytics - Core Metrics",
+      "item": [
+        {
+          "name": "Test Route",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/test",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "test"]
+            }
+          }
+        },
+        {
+          "name": "Summary Metrics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/summary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "summary"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has summary data', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data).to.have.property('totalReports');",
+                  "    pm.expect(response.data).to.have.property('openReports');",
+                  "    pm.expect(response.data).to.have.property('resolvedReports');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status Count",
+          "request": {
+            "method": "GET", 
+            "url": {
+              "raw": "{{base_url}}/api/analytics/status-count",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "status-count"]
+            }
+          }
+        },
+        {
+          "name": "Reports by Laboratory",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/by-lab",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "by-lab"]
+            }
+          }
+        },
+        {
+          "name": "Common Issues",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/common-issues",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "common-issues"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics - Trend Analysis",
+      "item": [
+        {
+          "name": "Monthly Trend",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/monthly",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "monthly"]
+            }
+          }
+        },
+        {
+          "name": "Daily Trend",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/daily",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "daily"]
+            }
+          }
+        },
+        {
+          "name": "Laboratory Heatmap",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/lab-heatmap",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "lab-heatmap"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics - Performance",
+      "item": [
+        {
+          "name": "Custodian Performance",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/custodian-performance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "custodian-performance"]
+            }
+          }
+        },
+        {
+          "name": "Top Custodian This Week",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/top-custodian-week",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "top-custodian-week"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics - User Leaderboards",
+      "item": [
+        {
+          "name": "Top Students",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/top-students",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "top-students"]
+            }
+          }
+        },
+        {
+          "name": "Top Faculty",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/top-faculty",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "top-faculty"]
+            }
+          }
+        },
+        {
+          "name": "Top Reporters (Combined)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/analytics/top-reporters",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "top-reporters"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set the auth token automatically if available",
+          "if (pm.globals.get('auth_token')) {",
+          "    pm.request.headers.add({",
+          "        key: 'Authorization',", 
+          "        value: 'Bearer ' + pm.globals.get('auth_token')",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}
