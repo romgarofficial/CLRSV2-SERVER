@@ -15,7 +15,8 @@ connectDB();
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://clrsv2-q7mwo3jup-romgarofficials-projects.vercel.app'
+  'https://clrsv2-q7mwo3jup-romgarofficials-projects.vercel.app',
+  'https://clrsv2.vercel.app'
 ];
 
 const corsOptions = {
