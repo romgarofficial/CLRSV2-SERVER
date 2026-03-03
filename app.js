@@ -1,14 +1,12 @@
-// server.js / app.js
+// server.js or app.js
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
-// Load environment variables
 dotenv.config();
 
-// Initialize express app
 const app = express();
 
 // Connect to MongoDB
@@ -25,7 +23,7 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // allow non-browser requests (e.g., Postman) or whitelisted origins
+    // allow non-browser requests or whitelisted origins
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -37,7 +35,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-// Apply CORS middleware
+// Apply CORS middleware globally
 app.use(cors(corsOptions));
 
 // Handle preflight requests globally
@@ -55,7 +53,7 @@ app.use(morgan('combined'));
 // --------------------
 app.get('/', (req, res) => {
   res.json({
-    message: 'CLRS Backend Server is running successfully!',
+    message: 'CLRS Backend Server is running!',
     version: '1.0.0',
     endpoints: {
       health: '/health',
@@ -75,95 +73,74 @@ app.get('/health', (req, res) => {
 // --------------------
 // API ROUTES
 // --------------------
-console.log('🔗 Loading API routes...');
-
-// Debug middleware to log API requests
-app.use('/api', (req, res, next) => {
-  console.log(`🔍 API Request: ${req.method} ${req.originalUrl}`);
-  next();
-});
-
-// Auth routes
 try {
   const authRoutes = require('./routes/authRoutes');
   app.use('/api/auth', authRoutes);
-  console.log('✅ Auth routes loaded and mounted at /api/auth');
-} catch (error) {
-  console.error('❌ Error loading auth routes:', error.message);
+  console.log('✅ Auth routes loaded at /api/auth');
+} catch (err) {
+  console.error('❌ Auth routes failed:', err.message);
 }
 
-// Laboratory routes
 try {
   const laboratoryRoutes = require('./routes/laboratoryRoutes');
   app.use('/api/laboratories', laboratoryRoutes);
-  console.log('✅ Laboratory routes loaded and mounted at /api/laboratories');
-} catch (error) {
-  console.error('❌ Error loading laboratory routes:', error.message);
+  console.log('✅ Laboratory routes loaded at /api/laboratories');
+} catch (err) {
+  console.error('❌ Laboratory routes failed:', err.message);
 }
 
-// News routes
 try {
   const newsRoutes = require('./routes/newsRoutes');
   app.use('/api/news', newsRoutes);
-  console.log('✅ News routes loaded and mounted at /api/news');
-} catch (error) {
-  console.error('❌ Error loading news routes:', error.message);
+  console.log('✅ News routes loaded at /api/news');
+} catch (err) {
+  console.error('❌ News routes failed:', err.message);
 }
 
-// Report routes
 try {
   const reportRoutes = require('./routes/reportRoutes');
   app.use('/api/reports', reportRoutes);
-  console.log('✅ Report routes loaded and mounted at /api/reports');
-} catch (error) {
-  console.error('❌ Error loading report routes:', error.message);
+  console.log('✅ Report routes loaded at /api/reports');
+} catch (err) {
+  console.error('❌ Report routes failed:', err.message);
 }
 
-// Notification routes
 try {
   const notificationRoutes = require('./routes/notificationRoutes');
   app.use('/api/notifications', notificationRoutes);
-  console.log('✅ Notification routes loaded and mounted at /api/notifications');
-} catch (error) {
-  console.error('❌ Error loading notification routes:', error.message);
+  console.log('✅ Notification routes loaded at /api/notifications');
+} catch (err) {
+  console.error('❌ Notification routes failed:', err.message);
 }
 
-// Analytics routes
 try {
   const analyticsRoutes = require('./routes/analyticsRoutes');
   app.use('/api/analytics', analyticsRoutes);
-  console.log('✅ Analytics routes loaded and mounted at /api/analytics');
-} catch (error) {
-  console.error('❌ Error loading analytics routes:', error.message);
+  console.log('✅ Analytics routes loaded at /api/analytics');
+} catch (err) {
+  console.error('❌ Analytics routes failed:', err.message);
 }
 
-// User routes
 try {
   const userRoutes = require('./routes/userRoutes');
   app.use('/api/users', userRoutes);
-  console.log('✅ User routes loaded and mounted at /api/users');
-} catch (error) {
-  console.error('❌ Error loading user routes:', error.message);
+  console.log('✅ User routes loaded at /api/users');
+} catch (err) {
+  console.error('❌ User routes failed:', err.message);
 }
 
 // --------------------
 // ERROR HANDLING
 // --------------------
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found', path: req.originalUrl });
+});
 
-// Catch-all error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'production' ? {} : err.message
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    message: 'Route not found',
-    path: req.originalUrl
   });
 });
 
