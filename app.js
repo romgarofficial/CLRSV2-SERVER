@@ -13,8 +13,22 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://clrsv2-q7mwo3jup-romgarofficials-projects.vercel.app'
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow non-browser requests
+    callback(allowedOrigins.indexOf(origin) !== -1 ? null : new Error('Not allowed by CORS'), true);
+  },
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
