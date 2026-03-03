@@ -21,8 +21,11 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow non-browser requests
-    callback(allowedOrigins.indexOf(origin) !== -1 ? null : new Error('Not allowed by CORS'), true);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -174,10 +177,14 @@ try {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'production' ? {} : err.message
-  });
+  if (err.message === 'Not allowed by CORS') {
+    res.status(403).json({ message: 'CORS policy does not allow this origin' });
+  } else {
+    res.status(500).json({
+      message: 'Something went wrong!',
+      error: process.env.NODE_ENV === 'production' ? {} : err.message
+    });
+  }
 });
 
 // 404 handler
