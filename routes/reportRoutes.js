@@ -2,14 +2,10 @@
  * ===========================================
  * REPORT ROUTES
  * ===========================================
- * Defines all routes for report management with proper role-based access control
- * and file upload support via multer
+ * Defines all routes for report management with proper role-based access control.
  */
 
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
 // Import controllers
 const {
@@ -31,50 +27,6 @@ const router = express.Router();
 
 // Add logging to verify routes are being loaded
 console.log('📋 Report routes loading...');
-
-// ===========================================
-// MULTER CONFIGURATION FOR FILE UPLOADS
-// ===========================================
-
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '..', 'uploads', 'reports');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('📁 Created uploads/reports directory');
-}
-
-// Configure multer for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-userId-originalname
-    const uniqueName = `${Date.now()}-${req.user?.id || 'unknown'}-${file.originalname}`;
-    cb(null, uniqueName);
-  }
-});
-
-// File filter - allow only images
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'), false);
-  }
-};
-
-// Configure multer upload middleware
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB per file
-    files: 5 // Maximum 5 files
-  }
-});
 
 // ===========================================
 // DEBUGGING MIDDLEWARE
@@ -171,14 +123,6 @@ router.post('/', (req, res, next) => {
 }, 
 authMiddleware, 
 requireRole('student', 'faculty', 'lab_custodian', 'admin'),
-upload.array('images', 5), // Allow up to 5 images
-(req, res, next) => {
-  // Log file upload info
-  if (req.files && req.files.length > 0) {
-    console.log(`📸 ${req.files.length} files uploaded:`, req.files.map(f => f.filename));
-  }
-  next();
-},
 createReport);
 
 // ===========================================
@@ -254,14 +198,6 @@ router.put('/:id', (req, res, next) => {
 }, 
 authMiddleware, 
 requireRole('lab_custodian', 'admin'),
-upload.array('images', 5), // Allow additional images
-(req, res, next) => {
-  // Log file upload info
-  if (req.files && req.files.length > 0) {
-    console.log(`📸 ${req.files.length} additional files uploaded:`, req.files.map(f => f.filename));
-  }
-  next();
-},
 updateReportDetails);
 
 // ===========================================
@@ -277,58 +213,6 @@ router.delete('/:id', (req, res, next) => {
   console.log(`🗑️  Delete report route accessed: ${req.params.id}`);
   next();
 }, authMiddleware, requireRole('admin'), deleteReport);
-
-// ===========================================
-// ERROR HANDLING FOR MULTER
-// ===========================================
-
-// Multer error handling middleware
-router.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    console.error('Multer error:', error.message);
-    
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        success: false,
-        message: 'File too large. Maximum size is 5MB per file.',
-        error: 'FILE_TOO_LARGE'
-      });
-    }
-    
-    if (error.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({
-        success: false,
-        message: 'Too many files. Maximum 5 files allowed.',
-        error: 'TOO_MANY_FILES'
-      });
-    }
-    
-    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
-      return res.status(400).json({
-        success: false,
-        message: 'Unexpected file field. Use "images" field name.',
-        error: 'UNEXPECTED_FILE'
-      });
-    }
-    
-    return res.status(400).json({
-      success: false,
-      message: 'File upload error: ' + error.message,
-      error: 'UPLOAD_ERROR'
-    });
-  }
-  
-  // Handle other file upload errors
-  if (error.message.includes('Invalid file type')) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-      error: 'INVALID_FILE_TYPE'
-    });
-  }
-  
-  next(error);
-});
 
 console.log('✅ Report routes loaded successfully');
 

@@ -7,8 +7,6 @@
  */
 
 const { Report, Laboratory, User, Notification } = require('../models');
-const path = require('path');
-const fs = require('fs');
 const { 
   sendReportCreatedNotification,
   sendReportCreatedAdminNotifications,
@@ -75,12 +73,6 @@ const createReport = async (req, res) => {
       }
     }
 
-    // Handle uploaded images
-    let imagePaths = [];
-    if (req.files && req.files.length > 0) {
-      imagePaths = req.files.map(file => file.path);
-    }
-
     // Create new report
     const report = new Report({
       labId: laboratory._id,
@@ -88,7 +80,6 @@ const createReport = async (req, res) => {
       workstationNumber: workstationNumber || '',
       issueCategory,
       description: description.trim(),
-      images: imagePaths,
       reporterId: req.user.id,
       status: 'submitted'
     });
@@ -131,20 +122,7 @@ const createReport = async (req, res) => {
 
   } catch (error) {
     console.error('Create report error:', error);
-    
-    // Clean up uploaded files if report creation fails
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        try {
-          if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path);
-          }
-        } catch (unlinkError) {
-          console.error('Error cleaning up file:', unlinkError);
-        }
-      });
-    }
-    
+
     // Handle mongoose validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
@@ -747,20 +725,6 @@ const updateReportDetails = async (req, res) => {
       updateData.description = description.trim();
     }
 
-    // Handle uploaded images
-    if (req.files && req.files.length > 0) {
-      const newImagePaths = req.files.map(file => file.path);
-      updateData.images = [...existingReport.images, ...newImagePaths];
-      
-      // Limit total images to 5
-      if (updateData.images.length > 5) {
-        return res.status(400).json({
-          success: false,
-          message: 'Maximum 5 images allowed per report'
-        });
-      }
-    }
-
     // Update report
     const updatedReport = await Report.findByIdAndUpdate(
       id,
@@ -777,7 +741,6 @@ const updateReportDetails = async (req, res) => {
       if (workstationNumber !== undefined) updatedFields.push('workstation');
       if (issueCategory !== undefined) updatedFields.push('category');
       if (description !== undefined) updatedFields.push('description');
-      if (req.files && req.files.length > 0) updatedFields.push('images');
 
       await sendReportDetailsUpdateNotification(
         updatedReport.reporterId._id,
@@ -807,20 +770,7 @@ const updateReportDetails = async (req, res) => {
 
   } catch (error) {
     console.error('Update report details error:', error);
-    
-    // Clean up uploaded files if update fails
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        try {
-          if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path);
-          }
-        } catch (unlinkError) {
-          console.error('Error cleaning up file:', unlinkError);
-        }
-      });
-    }
-    
+
     res.status(500).json({
       success: false,
       message: 'Server error while updating report',
