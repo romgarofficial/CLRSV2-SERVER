@@ -13,27 +13,9 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://clrsv2-q7mwo3jup-romgarofficials-projects.vercel.app',
-  'https://clrsv2.vercel.app'
-];
-
+// Permissive CORS configuration to support browser + Postman + Vercel
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow server-to-server and tools without an Origin header
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    console.warn(`CORS blocked origin: ${origin}`);
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: true, // Reflect request origin
   credentials: true,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   allowedHeaders: ['Content-Type', 'Authorization'],
